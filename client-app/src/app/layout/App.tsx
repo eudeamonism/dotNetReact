@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
-import { Container, List } from "semantic-ui-react";
+import { Container } from "semantic-ui-react";
 import { Activity } from "../models/activity";
 import NavBar from "./NavBar";
 import ActivityDashboard from "../../features/activities/dashboard/ActivityDashboard";
 import { v4 as uuid } from "uuid";
+import agent from "../api/agent";
+import LoadingComponent from "./LoadingComponent";
 
 //Going to setup an interface for App.tsx?
 
@@ -13,11 +14,19 @@ function App() {
   //Create a passable function to child so they can access activity data
   const [selectedActivity, setSelectedActivity] = useState<Activity | undefined>(undefined);
   const [editMode, setEditMode] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   //Makes a call to API once without dependencies, which sets activities array
   useEffect(() => {
-    axios.get<Activity[]>("http://localhost:5000/api/activities").then((response) => {
-      setActivities(response.data);
+    agent.Activities.list().then((response) => {
+      let activities: Activity[] = [];
+      response.forEach((activity) => {
+        activity.date = activity.date.split("T")[0];
+        activities.push(activity);
+      });
+      setActivities(activities);
+      setLoading(false);
     });
   }, []);
 
@@ -40,20 +49,34 @@ function App() {
   }
 
   function handleCreateOrEditActivity(activity: Activity) {
-    activity.id
-      ? setActivities([...activities.filter((x) => x.id !== activity.id), activity])
-      //If we are creating, why are we spreading too?
-      : setActivities([...activities, {...activity, id: uuid() }]);
-    //Should close form
-    setEditMode(false);
-    //Should update state for an edit or a creation
-    setSelectedActivity(activity);
+    setSubmitting(true);
+    if (activity.id) {
+      agent.Activities.update(activity).then(() => {
+        setActivities([...activities.filter((x) => x.id !== activity.id), activity]);
+        setSelectedActivity(activity);
+        setEditMode(false);
+        setSubmitting(false);
+      });
+    } else {
+      activity.id = uuid();
+      agent.Activities.create(activity).then((response) => {
+        setActivities([...activities, activity]);
+        setSelectedActivity(activity);
+        setEditMode(false);
+        setSubmitting(false);
+      });
+    }
   }
 
   function handleDeleteActivity(id: string) {
-    //This creates a new array that contains everything except the id we want to delete.
-    setActivities([...activities.filter((x) => x.id !== id)]);
+    setSubmitting(true);
+    agent.Activities.delete(id).then(() => {
+      setActivities(activities.filter((x) => x.id !== id));
+      setSubmitting(false);
+    });
   }
+
+  if (loading) return <LoadingComponent content="Loading app" />;
 
   return (
     <>
@@ -69,6 +92,7 @@ function App() {
           closeForm={handleFormClose}
           createOrEdit={handleCreateOrEditActivity}
           deleteActivity={handleDeleteActivity}
+          submitting={submitting}
         />
       </Container>
     </>
