@@ -1,3 +1,4 @@
+using Application.Core;
 using AutoMapper;
 using Domain;
 using MediatR;
@@ -9,13 +10,21 @@ namespace Application.Activities
     public class Edit
     {
         //Command type, no data sent out; IRequest
-        public class Command : IRequest
+        public class Command : IRequest<Result<Unit>>
         {
             //To access Activity class
             public Activity Activity { get; set; }
         }
 
-        public class Handler : IRequestHandler<Command>
+        public class CommandValidator : FluentValidation.AbstractValidator<Command>
+        {
+            public CommandValidator()
+            {
+                RuleFor(x => x.Activity).SetValidator(new ActivityValidator());
+            }
+        }
+
+        public class Handler : IRequestHandler<Command, Result<Unit>>
         {
             private readonly DataContext _context;
 
@@ -30,16 +39,26 @@ namespace Application.Activities
             }
 
             //Task types are for asynchronous operations.
-            public async Task<Unit> Handle(Command request, CancellationToken cancellationToken)
+            public async Task<Result<Unit>> Handle(
+                Command request,
+                CancellationToken cancellationToken
+            )
             {
                 //Awaiting Id
                 var activity = await _context.Activities.FindAsync(request.Activity.Id);
+
+                if (activity == null)
+                    return null;
                 //AutoMapper will map from Body to memory.
                 _mapper.Map(request.Activity, activity);
                 //Save changes from memory to database.
-                await _context.SaveChangesAsync();
-                //Nothing returned, but needed
-                return Unit.Value;
+                var result = await _context.SaveChangesAsync() > 0;
+
+                //Return Failure or return success
+                if (!result)
+                    return Result<Unit>.Failure("Failed to update activity");
+
+                return Result<Unit>.Success(Unit.Value);
             }
         }
     }
