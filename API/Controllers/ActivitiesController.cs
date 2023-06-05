@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Domain;
+using Microsoft.AspNetCore.Authorization;
 using Application.Activities;
 using Application;
 
