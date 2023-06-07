@@ -10,6 +10,11 @@ import { StoreContext, store } from "./app/stores/store";
 import { RouterProvider } from "react-router-dom";
 import { router } from "./app/router/routes";
 
+
+//Basically, MobX is hooked up utilizing React Context, useContext, and Provider
+//the store is a variable that creates instances of each store
+//StoreContext is a variable that utilizes Reacthook createContext(store)
+//Lastly, we export a function not used here but to access store.
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
 root.render(
   <StoreContext.Provider value={store}>
