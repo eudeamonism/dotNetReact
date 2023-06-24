@@ -6,6 +6,8 @@ using Persistence;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Application;
+using Application.Interfaces;
+using Infrastructure.Security;
 
 namespace API.Extensions
 {
@@ -48,6 +50,8 @@ namespace API.Extensions
             //Fluent Services
             services.AddFluentValidationAutoValidation();
             services.AddValidatorsFromAssemblyContaining<Create>();
+            services.AddHttpContextAccessor();
+            services.AddScoped<IUserAccessor, UserAccessor>();
 
             return services;
         }

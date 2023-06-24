@@ -1,8 +1,10 @@
 using Application.Activities;
 using Application.Core;
+using Application.Interfaces;
 using Domain;
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Persistence;
 
 namespace Application
@@ -27,9 +29,11 @@ namespace Application
         public class Handler : IRequestHandler<Command, Result<Unit>>
         {
             private readonly DataContext _context;
+            private readonly IUserAccessor _userAccessor;
 
-            public Handler(DataContext context)
+            public Handler(DataContext context, IUserAccessor userAccessor)
             {
+                _userAccessor = userAccessor;
                 _context = context;
             }
 
@@ -38,6 +42,21 @@ namespace Application
                 CancellationToken cancellationToken
             )
             {
+                //This user is exist only if database and user entry matches
+                var user = await _context.Users.FirstOrDefaultAsync(
+                    x => x.UserName == _userAccessor.GetUserName()
+                );
+
+                //DTO
+                var attendee = new ActivityAttendee
+                {
+                    AppUser = user,
+                    Activity = request.Activity,
+                    IsHost = true
+                };
+
+                request.Activity.Attendees.Add(attendee);
+
                 //This only adds data to memory, so we are not persisting anything in the database.
                 _context.Activities.Add(request.Activity);
                 //SaveChangeAsync() shows how many entries have changed
