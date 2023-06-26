@@ -18,3 +18,6 @@ namespace Infrastructure.Security
         }
     }
 }
+
+//C# class that IMPLEMENTS the IUserAccessor INTERFACE. This INTERFACE is a contract that defines
+//a method for getting the user name from the current HTTP context.

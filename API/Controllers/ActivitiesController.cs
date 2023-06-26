@@ -28,8 +28,10 @@ namespace API.Controllers
             return HandleResult(await Mediator.Send(new Create.Command { Activity = activity }));
         }
 
+        //@ IdentityServicesExtensions.cs, option
+        [Authorize(Policy = "IsActivityHost")]
         [HttpPut("{id}")]
-        //Activity activity might just be the body of the request
+        //Activity
         public async Task<IActionResult> EditActivity(Guid id, Activity activity)
         {
             //We pass along the id into the activity object
@@ -37,6 +39,7 @@ namespace API.Controllers
             return HandleResult(await Mediator.Send(new Edit.Command { Activity = activity }));
         }
 
+        [Authorize(Policy = "IsActivityHost")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteActivity(Guid id)
         {
