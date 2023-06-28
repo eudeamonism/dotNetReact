@@ -5,7 +5,7 @@ import { v4 as uuid } from "uuid";
 import { observer } from "mobx-react-lite";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useEffect } from "react";
-import { Activity } from "../../../app/models/activity";
+import { ActivityFormValues } from "../../../app/models/activity";
 import LoadingComponent from "../../../app/layout/LoadingComponent";
 
 //Formik is a wrapper that takes a parameter called initalValues which is the property it takes.
@@ -23,20 +23,12 @@ import MyDateInput from "../../../app/common/form/MyDateInput";
 //then it shouldupdate the UI.
 export default observer(function ActivityForm() {
   const { activityStore } = useStore();
-  const { loading, loadActivity, loadingInitial, createActivity, updateActivity } = activityStore;
+  const { loadActivity, loadingInitial, createActivity, updateActivity } = activityStore;
   const { id } = useParams();
   const navigate = useNavigate();
 
   //This is our useState hook setting the initial activities where the default values are blank.
-  const [activity, setActivity] = useState<Activity>({
-    id: "",
-    title: "",
-    category: "",
-    description: "",
-    date: null,
-    city: "",
-    venue: "",
-  });
+  const [activity, setActivity] = useState<ActivityFormValues>(new ActivityFormValues);
 
   //Yup Object which Formik has a validationSchema property where we pass this similarly named Yup object to it.
   //We then pass a Formik FormField wrapper for each input element, aka field so errors can be read clientside.
@@ -51,12 +43,12 @@ export default observer(function ActivityForm() {
 
   //This hook loads data upon initialization and change and it pulls from the MobX store.
   useEffect(() => {
-    if (id) loadActivity(id).then((activity) => setActivity(activity!));
+    if (id) loadActivity(id).then((activity) => setActivity(new ActivityFormValues(activity)))
   }, [id, loadActivity]);
 
   //handleSubmit
-  function handleFormSubmit(activity: Activity) {
-    if (activity.id.length === 0) {
+  function handleFormSubmit(activity: ActivityFormValues) {
+    if (!activity.id) {
       let newActivity = {
         ...activity,
         id: uuid(),
@@ -95,7 +87,7 @@ export default observer(function ActivityForm() {
             <Header content="Location Details" sub color="teal" />
             <MyTextInput name="city" placeholder="City" />
             <MyTextInput name="venue" placeholder="Venue" />
-            <Button disabled={isSubmitting || !dirty || !isValid} loading={loading} floated="right" positive type="submit" content="Submit" />
+            <Button disabled={isSubmitting || !dirty || !isValid} loading={isSubmitting} floated="right" positive type="submit" content="Submit" />
             <Button floated="right" type="button" content="Cancel" as={Link} to={"/activities"} />
           </Form>
         )}
