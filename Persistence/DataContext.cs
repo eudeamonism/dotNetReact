@@ -12,9 +12,12 @@ namespace Persistence
         public DataContext(DbContextOptions options)
             : base(options) { }
 
-        //Method--performs a task and does not take any parameters
+        //Setting each database here, and then Migrate
+        // At root folder, dotnet ef migrations add PhotoEntityAdded -p Persistence -s API
         public DbSet<Activity> Activities { get; set; }
         public DbSet<ActivityAttendee> ActivitiesAttendees { get; set; }
+        public DbSet<Photo> Photos { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
