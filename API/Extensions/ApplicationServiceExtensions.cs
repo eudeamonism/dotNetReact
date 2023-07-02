@@ -9,6 +9,7 @@ using Application;
 using Application.Interfaces;
 using Infrastructure.Security;
 using Infrastructure.Photos;
+using Application.Core;
 
 namespace API.Extensions
 {
